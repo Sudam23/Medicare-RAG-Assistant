@@ -178,11 +178,14 @@ retrieval strategies against each other, because they all run on the same hardwa
 It is not the honest place to describe what a visitor experiences, and for a while
 this project confused the two.
 
-Measured against the live instance on Render's free plan:
+Measured against the live instance on Render's free plan. The live figures are the
+median of 14 warm queries across two runs, because a single run of 7 was not stable
+enough to quote — the free plan shares a CPU, and the same seven questions produced
+medians 0.7 s apart on the sibling project:
 
 | | before | after |
 |---|---|---|
-| End-to-end answer, live | **27 s** | *(see below)* |
+| End-to-end answer, live | **27 s** | **1.3 s** |
 | End-to-end answer, laptop | 210 ms | 6 ms |
 | Of which retrieval, live | 271 ms | 271 ms |
 
