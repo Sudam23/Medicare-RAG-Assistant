@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: medicare-rag-assistant
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: oregon
+    healthCheckPath: /api/health
+    envVars:
+      # A visitor clicking through the examples makes a handful of requests;
+      # 60/minute leaves room for that without letting a script drain the
+      # instance. Only /api/ask and /api/feedback are counted.
+      - key: MEDICARE_RATE_LIMIT_REQUESTS
+        value: "60"
+      - key: MEDICARE_RATE_LIMIT_WINDOW
+        value: "60"
+      # One core on the free plan; letting ONNX spawn threads it cannot use
+      # makes inference slower, not faster.
+      - key: OMP_NUM_THREADS
+        value: "1"
+      # Leave ANTHROPIC_API_KEY unset: the demo runs in extractive mode, which
+      # is what every published number was measured in.

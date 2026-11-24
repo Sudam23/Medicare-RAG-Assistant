@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Environment
+.env
+
+# The 9 CMS booklets: ~11 MB, re-fetchable any time with `make data`, and they
+# belong to CMS rather than to this repository. Not tracked.
+data/raw/
+
+# Screenshots the browser test can be asked to keep.
+out/
+
+# The parsed pages (data/processed) and both indexes (data/index) ARE committed
+# on purpose: it makes `git clone && make serve` work without re-downloading the
+# PDFs and re-embedding them, and it makes the deployed container reproducible
+# from the exact bytes that were evaluated.
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Qdrant's embedded mode writes this when a process opens the index. It is
+# runtime state, not part of the index, and committing it ships a stale lock.
+data/index/qdrant/.lock

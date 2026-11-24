@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Medicare Answers</title>
+<meta name="description" content="Ask a question about Medicare in plain English and get an answer with a citation to the official page it came from.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <div class="brand">
+      <span class="brand-mark">📘</span>
+      <div>
+        <h1>Medicare Answers</h1>
+        <p class="tagline">Plain-English answers, with the official page they came from.</p>
+      </div>
+    </div>
+    <button id="theme-btn" class="icon-btn" type="button" aria-label="Toggle dark mode">◐</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="panel ask-panel">
+    <form id="ask-form" autocomplete="off">
+      <label class="sr-only" for="question">Your question</label>
+      <div class="ask-row">
+        <input id="question" name="question" type="text" maxlength="500"
+               placeholder="Does Medicare cover dental care?" required>
+        <button id="ask-btn" type="submit" class="primary">Ask</button>
+      </div>
+      <div class="controls">
+        <div class="control control-grow">
+          <label for="docs">Search in</label>
+          <select id="docs"><option value="">All 9 publications</option></select>
+        </div>
+        <div class="control">
+          <label for="mode">Retrieval</label>
+          <select id="mode">
+            <option value="hybrid">Hybrid</option>
+            <option value="dense">Semantic only</option>
+            <option value="lexical">Keyword only</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="k">Sources</label>
+          <select id="k"><option>4</option><option selected>6</option><option>8</option><option>10</option></select>
+        </div>
+      </div>
+    </form>
+    <div id="examples" class="chips"></div>
+  </section>
+
+  <p id="status" class="status" hidden></p>
+
+  <section id="answer-panel" class="panel answer-panel" hidden>
+    <div class="answer-head">
+      <div class="badges">
+        <span id="badge-strategy" class="badge"></span>
+        <span id="badge-confidence" class="badge"></span>
+        <span id="badge-grounded" class="badge"></span>
+      </div>
+      <div class="feedback">
+        <span class="feedback-label">Was this useful?</span>
+        <button class="icon-btn" id="fb-yes" type="button" aria-label="Helpful">👍</button>
+        <button class="icon-btn" id="fb-no" type="button" aria-label="Not helpful">👎</button>
+        <span id="fb-thanks" class="fb-thanks" hidden>Thanks — recorded.</span>
+      </div>
+    </div>
+    <p id="answer" class="answer"></p>
+    <ul id="notes" class="notes"></ul>
+    <details id="trace-box" class="trace-box">
+      <summary>How this answer was produced</summary>
+      <div id="trace"></div>
+    </details>
+  </section>
+
+  <section id="sources-panel" hidden>
+    <h2 class="section-title">Sources</h2>
+    <p class="section-hint">Every number in the answer links to one of these. Each opens the exact page of the official PDF.</p>
+    <ol id="sources" class="sources"></ol>
+  </section>
+
+  <section class="panel info-panel">
+    <h2 class="section-title">How accurate is this?</h2>
+    <p class="section-hint" id="eval-hint">Measured on held-out questions the system was never tuned on.</p>
+    <div id="evaluation"></div>
+  </section>
+
+  <!-- Static fallback text. loadMeta() replaces it with the canonical wording
+       from /api/stats, but a safety notice must never depend on a fetch. -->
+  <p id="disclaimer" class="disclaimer">Demonstration project only. Answers are drawn
+    from public Medicare publications and may be out of date or incomplete. This is not
+    medical, legal or insurance advice. For decisions about your own coverage, call
+    1-800-MEDICARE or visit medicare.gov.</p>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>Built from public CMS publications (public domain). Demonstration project — not medical, legal or insurance advice.</p>
+    <p><a href="/docs">API docs</a> · <a href="https://github.com/Sudam23/medicare-rag-assistant">Source on GitHub</a></p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

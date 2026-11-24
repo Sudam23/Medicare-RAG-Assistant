@@ -1,0 +1,343 @@
+{
+  "split": "dev",
+  "dense_baseline": {
+    "recall@1": 0.6222,
+    "recall@5": 0.8667,
+    "mrr@10": 0.733
+  },
+  "grid": [
+    {
+      "lexical_weight": 0.1,
+      "rrf_k": 20,
+      "recall@1": 0.6667,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.7591
+    },
+    {
+      "lexical_weight": 0.3,
+      "rrf_k": 5,
+      "recall@1": 0.6444,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.8889,
+      "mrr@10": 0.7458
+    },
+    {
+      "lexical_weight": 0.1,
+      "rrf_k": 10,
+      "recall@1": 0.6444,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.7441
+    },
+    {
+      "lexical_weight": 0.2,
+      "rrf_k": 60,
+      "recall@1": 0.6444,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.8889,
+      "mrr@10": 0.741
+    },
+    {
+      "lexical_weight": 0.2,
+      "rrf_k": 10,
+      "recall@1": 0.6222,
+      "recall@3": 0.8667,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.7387
+    },
+    {
+      "lexical_weight": 0.2,
+      "rrf_k": 5,
+      "recall@1": 0.6222,
+      "recall@3": 0.8667,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.7383
+    },
+    {
+      "lexical_weight": 0.4,
+      "rrf_k": 5,
+      "recall@1": 0.6222,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.7365
+    },
+    {
+      "lexical_weight": 0.3,
+      "rrf_k": 10,
+      "recall@1": 0.6222,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.8889,
+      "mrr@10": 0.7352
+    },
+    {
+      "lexical_weight": 0.2,
+      "rrf_k": 20,
+      "recall@1": 0.6222,
+      "recall@3": 0.8667,
+      "recall@5": 0.8667,
+      "recall@10": 0.8889,
+      "mrr@10": 0.7333
+    },
+    {
+      "lexical_weight": 0.0,
+      "rrf_k": 5,
+      "recall@1": 0.6222,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.733
+    },
+    {
+      "lexical_weight": 0.0,
+      "rrf_k": 10,
+      "recall@1": 0.6222,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.733
+    },
+    {
+      "lexical_weight": 0.0,
+      "rrf_k": 20,
+      "recall@1": 0.6222,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.733
+    },
+    {
+      "lexical_weight": 0.0,
+      "rrf_k": 60,
+      "recall@1": 0.6222,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.733
+    },
+    {
+      "lexical_weight": 0.1,
+      "rrf_k": 5,
+      "recall@1": 0.6222,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.733
+    },
+    {
+      "lexical_weight": 0.5,
+      "rrf_k": 5,
+      "recall@1": 0.6222,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.7297
+    },
+    {
+      "lexical_weight": 0.3,
+      "rrf_k": 20,
+      "recall@1": 0.6222,
+      "recall@3": 0.8,
+      "recall@5": 0.8889,
+      "recall@10": 0.8889,
+      "mrr@10": 0.7259
+    },
+    {
+      "lexical_weight": 0.3,
+      "rrf_k": 60,
+      "recall@1": 0.6222,
+      "recall@3": 0.8222,
+      "recall@5": 0.8444,
+      "recall@10": 0.9111,
+      "mrr@10": 0.7256
+    },
+    {
+      "lexical_weight": 0.4,
+      "rrf_k": 10,
+      "recall@1": 0.6,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.7191
+    },
+    {
+      "lexical_weight": 0.1,
+      "rrf_k": 60,
+      "recall@1": 0.6,
+      "recall@3": 0.8222,
+      "recall@5": 0.8889,
+      "recall@10": 0.8889,
+      "mrr@10": 0.7167
+    },
+    {
+      "lexical_weight": 0.4,
+      "rrf_k": 20,
+      "recall@1": 0.6,
+      "recall@3": 0.8222,
+      "recall@5": 0.8889,
+      "recall@10": 0.9111,
+      "mrr@10": 0.7135
+    },
+    {
+      "lexical_weight": 0.5,
+      "rrf_k": 10,
+      "recall@1": 0.6,
+      "recall@3": 0.8222,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.7102
+    },
+    {
+      "lexical_weight": 0.4,
+      "rrf_k": 60,
+      "recall@1": 0.6,
+      "recall@3": 0.8,
+      "recall@5": 0.8444,
+      "recall@10": 0.8889,
+      "mrr@10": 0.709
+    },
+    {
+      "lexical_weight": 0.6,
+      "rrf_k": 5,
+      "recall@1": 0.5778,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.7041
+    },
+    {
+      "lexical_weight": 0.5,
+      "rrf_k": 60,
+      "recall@1": 0.6,
+      "recall@3": 0.8,
+      "recall@5": 0.8444,
+      "recall@10": 0.8667,
+      "mrr@10": 0.7021
+    },
+    {
+      "lexical_weight": 0.5,
+      "rrf_k": 20,
+      "recall@1": 0.5778,
+      "recall@3": 0.8222,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.7017
+    },
+    {
+      "lexical_weight": 0.6,
+      "rrf_k": 20,
+      "recall@1": 0.5556,
+      "recall@3": 0.8,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.6875
+    },
+    {
+      "lexical_weight": 0.6,
+      "rrf_k": 10,
+      "recall@1": 0.5556,
+      "recall@3": 0.8,
+      "recall@5": 0.8889,
+      "recall@10": 0.9111,
+      "mrr@10": 0.6869
+    },
+    {
+      "lexical_weight": 0.8,
+      "rrf_k": 5,
+      "recall@1": 0.5333,
+      "recall@3": 0.8444,
+      "recall@5": 0.8667,
+      "recall@10": 0.9111,
+      "mrr@10": 0.6828
+    },
+    {
+      "lexical_weight": 0.6,
+      "rrf_k": 60,
+      "recall@1": 0.5333,
+      "recall@3": 0.8,
+      "recall@5": 0.8444,
+      "recall@10": 0.8667,
+      "mrr@10": 0.6687
+    },
+    {
+      "lexical_weight": 0.8,
+      "rrf_k": 20,
+      "recall@1": 0.5111,
+      "recall@3": 0.8,
+      "recall@5": 0.8444,
+      "recall@10": 0.9111,
+      "mrr@10": 0.6625
+    },
+    {
+      "lexical_weight": 0.8,
+      "rrf_k": 10,
+      "recall@1": 0.5111,
+      "recall@3": 0.7778,
+      "recall@5": 0.8889,
+      "recall@10": 0.9111,
+      "mrr@10": 0.6621
+    },
+    {
+      "lexical_weight": 0.8,
+      "rrf_k": 60,
+      "recall@1": 0.5111,
+      "recall@3": 0.8,
+      "recall@5": 0.8444,
+      "recall@10": 0.8667,
+      "mrr@10": 0.6491
+    },
+    {
+      "lexical_weight": 1.0,
+      "rrf_k": 5,
+      "recall@1": 0.4889,
+      "recall@3": 0.7778,
+      "recall@5": 0.8889,
+      "recall@10": 0.9111,
+      "mrr@10": 0.6489
+    },
+    {
+      "lexical_weight": 1.0,
+      "rrf_k": 20,
+      "recall@1": 0.4889,
+      "recall@3": 0.8,
+      "recall@5": 0.8444,
+      "recall@10": 0.8889,
+      "mrr@10": 0.641
+    },
+    {
+      "lexical_weight": 1.0,
+      "rrf_k": 10,
+      "recall@1": 0.4889,
+      "recall@3": 0.7778,
+      "recall@5": 0.8444,
+      "recall@10": 0.9111,
+      "mrr@10": 0.6387
+    },
+    {
+      "lexical_weight": 1.0,
+      "rrf_k": 60,
+      "recall@1": 0.4889,
+      "recall@3": 0.7778,
+      "recall@5": 0.8444,
+      "recall@10": 0.8667,
+      "mrr@10": 0.633
+    }
+  ],
+  "best": {
+    "lexical_weight": 0.1,
+    "rrf_k": 20,
+    "recall@1": 0.6667,
+    "recall@3": 0.8444,
+    "recall@5": 0.8667,
+    "recall@10": 0.9111,
+    "mrr@10": 0.7591
+  }
+}

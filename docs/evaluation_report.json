@@ -1,0 +1,171 @@
+{
+  "generated_at": "2026-11-24T09:07:40Z",
+  "project_version": "1.0.0",
+  "split": "test",
+  "index": {
+    "built_at": "2026-11-24T09:05:26+00:00",
+    "num_chunks": 1130,
+    "num_pages": 392,
+    "num_documents": 9,
+    "embedding_model": "BAAI/bge-small-en-v1.5",
+    "embedding_dim": 384,
+    "vector_store": "qdrant-embedded",
+    "collection": "medicare_chunks",
+    "points_indexed": 1130,
+    "chunking": {
+      "target_chars": 900,
+      "overlap_chars": 150
+    },
+    "bm25": {
+      "vocabulary_terms": 3804,
+      "postings": 67568,
+      "avg_doc_length": 93.208
+    },
+    "build_seconds": 55.1
+  },
+  "llm_enabled": false,
+  "llm_model": null,
+  "min_relevance_score": 0.62,
+  "retrieval": {
+    "lexical": {
+      "num_questions": 35,
+      "num_in_scope": 35,
+      "num_out_of_scope": 0,
+      "recall_at": {
+        "1": 0.3714,
+        "3": 0.6,
+        "5": 0.6857,
+        "10": 0.9429
+      },
+      "mrr_at_10": 0.5257,
+      "answer_rate_in_scope": 1.0,
+      "refusal_rate_out_of_scope": 0.0,
+      "mean_groundedness": 0.0,
+      "cited_correct_page_rate": 0.0,
+      "citation_precision": 0.0,
+      "median_latency_ms": 0.62,
+      "p95_latency_ms": 1.14
+    },
+    "dense": {
+      "num_questions": 35,
+      "num_in_scope": 35,
+      "num_out_of_scope": 0,
+      "recall_at": {
+        "1": 0.5143,
+        "3": 0.6857,
+        "5": 0.9143,
+        "10": 0.9429
+      },
+      "mrr_at_10": 0.6543,
+      "answer_rate_in_scope": 1.0,
+      "refusal_rate_out_of_scope": 0.0,
+      "mean_groundedness": 0.0,
+      "cited_correct_page_rate": 0.0,
+      "citation_precision": 0.0,
+      "median_latency_ms": 4.31,
+      "p95_latency_ms": 5.09
+    },
+    "hybrid": {
+      "num_questions": 35,
+      "num_in_scope": 35,
+      "num_out_of_scope": 0,
+      "recall_at": {
+        "1": 0.4857,
+        "3": 0.7429,
+        "5": 0.8857,
+        "10": 0.9429
+      },
+      "mrr_at_10": 0.639,
+      "answer_rate_in_scope": 1.0,
+      "refusal_rate_out_of_scope": 0.0,
+      "mean_groundedness": 0.0,
+      "cited_correct_page_rate": 0.0,
+      "citation_precision": 0.0,
+      "median_latency_ms": 4.58,
+      "p95_latency_ms": 5.97
+    }
+  },
+  "pipeline": {
+    "num_questions": 44,
+    "num_in_scope": 35,
+    "num_out_of_scope": 9,
+    "recall_at": {
+      "1": 0.4857,
+      "3": 0.7429,
+      "5": 0.8857,
+      "10": 0.9429
+    },
+    "mrr_at_10": 0.639,
+    "answer_rate_in_scope": 1.0,
+    "refusal_rate_out_of_scope": 1.0,
+    "mean_groundedness": 1.0,
+    "cited_correct_page_rate": 0.9429,
+    "citation_precision": 0.2333,
+    "median_latency_ms": 219.56,
+    "p95_latency_ms": 276.41
+  },
+  "complementarity_at_10": {
+    "k": 10,
+    "both": 31,
+    "only_dense": 2,
+    "only_lexical": 2,
+    "neither": 0,
+    "total": 35
+  },
+  "examples": {
+    "answered": [
+      {
+        "question": "Is acupuncture covered by Medicare?",
+        "rank": 1,
+        "strategy": "extractive"
+      },
+      {
+        "question": "Does Part B cover visits to my doctor?",
+        "rank": 6,
+        "strategy": "extractive"
+      },
+      {
+        "question": "Are pneumonia shots covered?",
+        "rank": 1,
+        "strategy": "extractive"
+      },
+      {
+        "question": "Does Medicare help with dementia care for family caregivers?",
+        "rank": 4,
+        "strategy": "extractive"
+      },
+      {
+        "question": "Is treatment for opioid addiction covered?",
+        "rank": 1,
+        "strategy": "extractive"
+      }
+    ],
+    "missed": [
+      {
+        "question": "What is a guaranteed issue right?",
+        "expected": [
+          [
+            "02110",
+            19
+          ],
+          [
+            "02110",
+            20
+          ]
+        ],
+        "top_score": 0.738
+      },
+      {
+        "question": "Who does Medicare share my health information with?",
+        "expected": [
+          [
+            "10050",
+            108
+          ]
+        ],
+        "top_score": 0.8
+      }
+    ],
+    "wrongly_answered_out_of_scope": []
+  }
+}
