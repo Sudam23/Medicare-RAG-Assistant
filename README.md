@@ -4,6 +4,9 @@
 the official government booklets, with the page number next to every claim — and an
 honest "I don't know" when the booklets don't answer it.**
 
+**Live demo:** <!-- BEGIN:demo-url -->deploying — see *Run it yourself* below<!-- END:demo-url -->
+**Source:** https://github.com/Sudam23/medicare-rag-assistant
+
 Built by Sudam Kumar Paul as a portfolio project for an AI/ML engineering role.
 Not medical, legal or insurance advice.
 
