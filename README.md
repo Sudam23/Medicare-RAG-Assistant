@@ -97,7 +97,10 @@ flowchart LR
 ```
 
 **Step 2 — answering a question.** This runs every time somebody asks something,
-and takes about 6 ms. It reads the indexes built in step 1 and writes nothing.
+and takes about 6 ms on a laptop. It reads the indexes built in
+step 1 and writes nothing. The free instance the demo is deployed to has about a tenth
+of a CPU core, where the same question is measured at roughly 1.3 s — see
+[deployed speed](docs/EVALUATION.md#8-speed-where-it-is-actually-deployed).
 
 ```mermaid
 flowchart LR

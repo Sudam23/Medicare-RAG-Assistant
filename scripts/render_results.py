@@ -117,6 +117,10 @@ def system_diagram(report: dict) -> str:
     """
     idx = report["index"]
     pipe = report["pipeline"]
+    # The 1.3 s below is measured against the deployed instance, not produced by
+    # `make eval`, which runs on whatever machine invokes it. Re-measure it when the
+    # deployment changes; docs/EVALUATION.md section 8 records how, and over how
+    # many samples, because a short run on a shared CPU does not pin a median down.
     return f"""**Step 1 \u2014 building the index.** This runs once, on a laptop, in about two
 minutes. Nothing here happens while somebody is waiting.
 
@@ -144,7 +148,10 @@ flowchart LR
 ```
 
 **Step 2 \u2014 answering a question.** This runs every time somebody asks something,
-and takes about {pipe["median_latency_ms"]:.0f} ms. It reads the indexes built in step 1 and writes nothing.
+and takes about {pipe["median_latency_ms"]:.0f} ms on a laptop. It reads the indexes built in
+step 1 and writes nothing. The free instance the demo is deployed to has about a tenth
+of a CPU core, where the same question is measured at roughly 1.3 s \u2014 see
+[deployed speed](docs/EVALUATION.md#8-speed-where-it-is-actually-deployed).
 
 ```mermaid
 flowchart LR
