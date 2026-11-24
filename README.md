@@ -69,29 +69,61 @@ shows it is measured: 100% of the out-of-scope test questions were refused.
 
 ## 3. How it works — the whole system
 
-```
-  ONE TIME (make data && make index)          EVERY QUESTION (make serve)
+<!-- BEGIN:system-diagram -->
+**Step 1 — building the index.** This runs once, on a laptop, in about two
+minutes. Nothing here happens while somebody is waiting.
 
-  9 official PDFs from medicare.gov            Browser (plain HTML + JS)
-            |                                            |
-            v                                            v
-  [1] Parse pages with pypdf                   FastAPI  /api/ask
-      fix the printed page numbers                       |
-            |                                            v
-            v                                   +------------------+
-  [2] Split into ~900-character chunks          |  LangGraph       |
-      that stop at paragraph breaks             |  state machine   |
-            |                                   |  (diagram below) |
-            +---------------+                   +------------------+
-            |               |                       |          |
-            v               v                       v          v
-  [3] Embeddings      [4] BM25 keyword        Qdrant       BM25 index
-      bge-small-en        inverted index      (meaning)    (exact words)
-      384-dim                  |                   |          |
-            |                  |                   +----+-----+
-            v                  v                        v
-       Qdrant (on disk)   .npz on disk          fused, graded, cited
+```mermaid
+flowchart LR
+    PDF["<b>9 official CMS booklets</b><br/>396 pages of PDF<br/>from medicare.gov"]
+    PARSE["<b>Read every page</b><br/>recover the page number printed on it<br/>strip repeated headers,<br/>contents and index pages"]
+    CHUNK["<b>Cut into passages</b><br/>~900 characters,<br/>split at paragraph breaks<br/><b>1,108 passages</b> from 381 pages"]
+    EMB["<b>Passage &rarr; meaning</b><br/>BAAI/bge-small-en-v1.5<br/>384 numbers per passage"]
+    LEX["<b>Passage &rarr; words</b><br/>BM25 over<br/>3,794 distinct terms"]
+    VDB[("<b>Meaning index</b><br/>Qdrant, on disk")]
+    KDB[("<b>Word index</b><br/>BM25, on disk")]
+
+    PDF --> PARSE --> CHUNK
+    CHUNK --> EMB --> VDB
+    CHUNK --> LEX --> KDB
+
+    classDef build fill:#dbe7fb,stroke:#2f5fa8,color:#1a1a1a
+    classDef store fill:#ffe9a8,stroke:#9a7b25,stroke-width:2px,color:#1a1a1a
+    class PDF,PARSE,CHUNK,EMB,LEX build
+    class VDB,KDB store
 ```
+
+**Step 2 — answering a question.** This runs every time somebody asks something,
+and takes about 210 ms. It reads the two indexes built in step 1 and writes nothing.
+
+```mermaid
+flowchart LR
+    ASK["<b>A question</b><br/><i>&quot;Does Medicare<br/>cover dental care?&quot;</i>"]
+    API["<b>FastAPI</b><br/>/api/ask"]
+    BRAIN["<b>LangGraph state machine</b><br/>check the question, search,<br/>judge what came back,<br/>answer or refuse<br/><i>(drawn in full below)</i>"]
+    VDB2[("<b>Meaning index</b><br/>Qdrant")]
+    KDB2[("<b>Word index</b><br/>BM25")]
+    FUSE["<b>Merge the two lists</b><br/>weighted reciprocal<br/>rank fusion<br/><i>ranks merged, not scores</i>"]
+    OUT["<b>Answer</b><br/>sentences quoted from<br/>the passages, each carrying<br/>its booklet and page"]
+
+    ASK --> API --> BRAIN
+    BRAIN -- "the question,<br/>as meaning" --> VDB2
+    BRAIN -- "the question,<br/>as words" --> KDB2
+    VDB2 -- "closest passages" --> FUSE
+    KDB2 -- "best word matches" --> FUSE
+    FUSE --> OUT
+
+    classDef serve fill:#d8f0dd,stroke:#1e7e34,color:#1a1a1a
+    classDef store fill:#ffe9a8,stroke:#9a7b25,stroke-width:2px,color:#1a1a1a
+    class ASK,API,BRAIN,FUSE,OUT serve
+    class VDB2,KDB2 store
+```
+<!-- END:system-diagram -->
+
+**How to read them.** Blue boxes run **once**, when the index is built. Green boxes run
+**every time somebody asks a question**. The two yellow cylinders are the files on disk —
+the only thing the two halves share, and the reason answering a question is fast: all
+the slow work already happened in step 1.
 
 **The decision logic is not drawn by hand.** The diagram below is exported directly
 from the compiled LangGraph object by `make docs`, so it cannot drift away from the

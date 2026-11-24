@@ -55,11 +55,14 @@ docs: ## regenerate the generated sections of README.md and docs/
 docs-check: ## fail if the published numbers disagree with the evaluation report
 	$(PY) scripts/render_results.py --check
 
+diagrams: ## render every Mermaid diagram in a real browser and check it draws
+	$(PY) scripts/check_diagrams.py $(ARGS)
+
 docker-build: ## build the container image
 	docker build -t medicare-rag-assistant .
 
 docker-run: ## run the container on http://127.0.0.1:8000
 	docker run --rm -p 8000:8000 medicare-rag-assistant
 
-.PHONY: help venv data index eval eval-dev tune serve test e2e lint fmt docs docs-check \
+.PHONY: help venv data index eval eval-dev tune serve test e2e lint fmt docs docs-check diagrams \
 	docker-build docker-run

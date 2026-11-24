@@ -108,6 +108,65 @@ def complementarity(report: dict) -> str:
     )
 
 
+def system_diagram(report: dict) -> str:
+    """The whole-system picture, with its figures taken from the real index.
+
+    Drawn as Mermaid rather than ASCII art so GitHub renders it as an actual
+    diagram, and generated rather than hand-drawn so the passage and term counts
+    cannot drift away from the index that is actually shipped.
+    """
+    idx = report["index"]
+    pipe = report["pipeline"]
+    return f"""**Step 1 \u2014 building the index.** This runs once, on a laptop, in about two
+minutes. Nothing here happens while somebody is waiting.
+
+```mermaid
+flowchart LR
+    PDF["<b>9 official CMS booklets</b><br/>396 pages of PDF<br/>from medicare.gov"]
+    PARSE["<b>Read every page</b><br/>recover the page number printed on it<br/>strip repeated headers,<br/>contents and index pages"]
+    CHUNK["<b>Cut into passages</b><br/>~{idx["chunking"]["target_chars"]} characters,<br/>split at paragraph breaks<br/><b>{idx["num_chunks"]:,} passages</b> from {idx["num_pages"]} pages"]
+    EMB["<b>Passage &rarr; meaning</b><br/>{idx["embedding_model"]}<br/>{idx["embedding_dim"]} numbers per passage"]
+    LEX["<b>Passage &rarr; words</b><br/>BM25 over<br/>{idx["bm25"]["vocabulary_terms"]:,} distinct terms"]
+    VDB[("<b>Meaning index</b><br/>Qdrant, on disk")]
+    KDB[("<b>Word index</b><br/>BM25, on disk")]
+
+    PDF --> PARSE --> CHUNK
+    CHUNK --> EMB --> VDB
+    CHUNK --> LEX --> KDB
+
+    classDef build fill:#dbe7fb,stroke:#2f5fa8,color:#1a1a1a
+    classDef store fill:#ffe9a8,stroke:#9a7b25,stroke-width:2px,color:#1a1a1a
+    class PDF,PARSE,CHUNK,EMB,LEX build
+    class VDB,KDB store
+```
+
+**Step 2 \u2014 answering a question.** This runs every time somebody asks something,
+and takes about {pipe["median_latency_ms"]:.0f} ms. It reads the two indexes built in step 1 and writes nothing.
+
+```mermaid
+flowchart LR
+    ASK["<b>A question</b><br/><i>&quot;Does Medicare<br/>cover dental care?&quot;</i>"]
+    API["<b>FastAPI</b><br/>/api/ask"]
+    BRAIN["<b>LangGraph state machine</b><br/>check the question, search,<br/>judge what came back,<br/>answer or refuse<br/><i>(drawn in full below)</i>"]
+    VDB2[("<b>Meaning index</b><br/>Qdrant")]
+    KDB2[("<b>Word index</b><br/>BM25")]
+    FUSE["<b>Merge the two lists</b><br/>weighted reciprocal<br/>rank fusion<br/><i>ranks merged, not scores</i>"]
+    OUT["<b>Answer</b><br/>sentences quoted from<br/>the passages, each carrying<br/>its booklet and page"]
+
+    ASK --> API --> BRAIN
+    BRAIN -- "the question,<br/>as meaning" --> VDB2
+    BRAIN -- "the question,<br/>as words" --> KDB2
+    VDB2 -- "closest passages" --> FUSE
+    KDB2 -- "best word matches" --> FUSE
+    FUSE --> OUT
+
+    classDef serve fill:#d8f0dd,stroke:#1e7e34,color:#1a1a1a
+    classDef store fill:#ffe9a8,stroke:#9a7b25,stroke-width:2px,color:#1a1a1a
+    class ASK,API,BRAIN,FUSE,OUT serve
+    class VDB2,KDB2 store
+```"""
+
+
 def index_facts(report: dict) -> str:
     idx = report["index"]
     return (
@@ -125,6 +184,7 @@ def blocks() -> dict[str, str]:
     report = json.loads(REPORT.read_text())
     return {
         "pipeline-diagram": DIAGRAM.read_text().strip(),
+        "system-diagram": system_diagram(report),
         "retrieval-table": retrieval_table(report).strip(),
         "pipeline-table": pipeline_table(report).strip(),
         "complementarity": complementarity(report).strip(),
