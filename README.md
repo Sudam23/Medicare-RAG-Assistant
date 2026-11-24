@@ -333,6 +333,28 @@ make e2e      # drive a real Chrome against a running instance
 
 No GPU. No vector database server. No API key required.
 
+### Deploying it
+
+`render.yaml` is a Render blueprint, so the whole service is described in the repo.
+With a Render account signed in, open:
+
+```
+https://render.com/deploy?repo=https://github.com/Sudam23/medicare-rag-assistant
+```
+
+Render reads `render.yaml`, builds the `Dockerfile`, and brings the service up on the
+free plan with `/api/health` as the health check. Nothing needs configuring by hand,
+and no API key is required — the demo runs in extractive mode.
+
+Once it is live, point the browser test at it:
+
+```bash
+make e2e ARGS="--base-url https://<your-service>.onrender.com"
+```
+
+The free plan sleeps after inactivity, so the first request to a cold instance takes
+around 30 seconds. After that the median is ~220 ms.
+
 ---
 
 ## 12. Layout
