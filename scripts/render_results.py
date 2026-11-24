@@ -145,7 +145,7 @@ and takes about {pipe["median_latency_ms"]:.0f} ms. It reads the two indexes bui
 
 ```mermaid
 flowchart LR
-    ASK["<b>A question</b><br/><i>&quot;Does Medicare<br/>cover dental care?&quot;</i>"]
+    ASK["<b>A question</b><br/><i>\u201cDoes Medicare<br/>cover dental care?\u201d</i>"]
     API["<b>FastAPI</b><br/>/api/ask"]
     BRAIN["<b>LangGraph state machine</b><br/>check the question, search,<br/>judge what came back,<br/>answer or refuse<br/><i>(drawn in full below)</i>"]
     VDB2[("<b>Meaning index</b><br/>Qdrant")]

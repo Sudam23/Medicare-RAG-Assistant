@@ -37,40 +37,77 @@ PAGE = """<!doctype html>
 <html><head><meta charset="utf-8"><title>diagram check</title></head>
 <body><div id="out"></div>
 <script type="module">
-import mermaid from "%s";
-mermaid.initialize({startOnLoad: false, securityLevel: "loose"});
-const diagrams = %s;
-const results = [];
-for (const d of diagrams) {
-  try {
-    await mermaid.parse(d.text);
-    const {svg} = await mermaid.render("d" + d.index, d.text);
-    const holder = document.createElement("div");
-    holder.id = "render-" + d.index;
-    holder.innerHTML = svg;
-    document.getElementById("out").appendChild(holder);
-    const el = holder.querySelector("svg");
-    results.push({...d, ok: !!el, width: el ? el.getBoundingClientRect().width : 0, error: null});
-  } catch (err) {
-    results.push({...d, ok: false, width: 0, error: String(err && err.message || err)});
+window.__results = [];
+window.__fatal = null;
+try {
+  const mermaid = (await import("%s")).default;
+  // GitHub uses the default security level, not "loose". Checking under looser
+  // settings than the real renderer is how a diagram passes here and then shows
+  // an empty grey box on GitHub.
+  mermaid.initialize({startOnLoad: false});
+
+  // By the time GitHub's renderer parses a block, HTML entities in it have been
+  // decoded: "&quot;" has become a bare double quote, which closes a node label
+  // early and fails with "Expecting SQE, DOUBLECIRCLEEND, ...". Checking only
+  // the raw source misses that completely, so each diagram is checked both ways.
+  const decode = (text) => {
+    const area = document.createElement("textarea");
+    area.innerHTML = text;
+    return area.value;
+  };
+
+  const diagrams = %s;
+  let uid = 0;
+  for (const d of diagrams) {
+    const variants = [["as written", d.text]];
+    const decoded = decode(d.text);
+    if (decoded !== d.text) variants.push(["with HTML entities decoded", decoded]);
+
+    let ok = true, width = 0, error = null, failedVariant = null;
+    for (const [label, text] of variants) {
+      try {
+        await mermaid.parse(text);
+        const out = await mermaid.render("mmd" + (uid++), text);
+        const holder = document.createElement("div");
+        holder.innerHTML = out.svg;
+        document.getElementById("out").appendChild(holder);
+        const el = holder.querySelector("svg");
+        if (!el) throw new Error("rendered no svg element");
+        width = Math.max(width, el.getBoundingClientRect().width);
+      } catch (err) {
+        ok = false;
+        failedVariant = label;
+        error = String((err && err.message) || err);
+        break;
+      }
+    }
+    window.__results.push({
+      index: d.index, source: d.source, text: d.text,
+      ok, width, error, failedVariant, variants: variants.length
+    });
   }
+} catch (err) {
+  window.__fatal = String((err && err.message) || err);
 }
-window.__results = results;
 window.__done = true;
 </script></body></html>
 """
 
 
-def collect() -> list[dict]:
+def collect(extra: list[Path] | None = None) -> list[dict]:
     blocks: list[dict] = []
-    for path in SOURCES:
+    for path in SOURCES + list(extra or []):
         if not path.exists():
             continue
         for match in re.finditer(r"```mermaid\n(.*?)```", path.read_text(), re.DOTALL):
+            try:
+                name = str(path.relative_to(ROOT))
+            except ValueError:
+                name = str(path)
             blocks.append(
                 {
                     "index": len(blocks),
-                    "source": str(path.relative_to(ROOT)),
+                    "source": name,
                     "text": match.group(1).rstrip(),
                 }
             )
@@ -85,16 +122,21 @@ async def run(blocks: list[dict], shots: Path | None) -> int:
         async with await Browser.attach(port=9223) as browser:
             await browser.goto(page.as_uri())
             await browser.wait_for("window.__done === true", 120, "mermaid to finish")
+            fatal = await browser.js("window.__fatal")
+            if fatal:
+                print(f"  the checker itself failed to run: {fatal}", file=sys.stderr)
+                return 2
             results = await browser.js("window.__results")
 
             failures = []
             for r in results:
                 head = r["text"].splitlines()[0][:48]
                 if r["ok"] and r["width"] > 50:
-                    print(f"  [PASS] {r['source']}  {head!r}  -> {r['width']:.0f}px wide")
+                    forms = "both forms" if r["variants"] > 1 else "1 form"
+                    print(f"  [PASS] {r['source']}  {head!r}  -> {r['width']:.0f}px, {forms}")
                 else:
                     failures.append(r)
-                    print(f"  [FAIL] {r['source']}  {head!r}")
+                    print(f"  [FAIL] {r['source']}  {head!r}  ({r['failedVariant']})")
                     if r["error"]:
                         print(f"         {r['error']}")
 
@@ -110,9 +152,16 @@ async def run(blocks: list[dict], shots: Path | None) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--shots", type=Path, default=None, help="directory for a screenshot")
+    parser.add_argument(
+        "--also",
+        type=Path,
+        nargs="*",
+        default=None,
+        help="extra markdown files to check (used to test this checker itself)",
+    )
     args = parser.parse_args()
 
-    blocks = collect()
+    blocks = collect(args.also)
     if not blocks:
         print("no mermaid diagrams found", file=sys.stderr)
         return 2

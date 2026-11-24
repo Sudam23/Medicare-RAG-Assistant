@@ -4,7 +4,7 @@
 the official government booklets, with the page number next to every claim — and an
 honest "I don't know" when the booklets don't answer it.**
 
-**Live demo:** <!-- BEGIN:demo-url -->deploying — see *Run it yourself* below<!-- END:demo-url -->
+**Live demo:** <!-- BEGIN:demo-url -->https://medicare-rag-assistant.onrender.com<!-- END:demo-url -->
 **Source:** https://github.com/Sudam23/medicare-rag-assistant
 
 Built by Sudam Kumar Paul as a portfolio project for an AI/ML engineering role.
@@ -98,7 +98,7 @@ and takes about 210 ms. It reads the two indexes built in step 1 and writes noth
 
 ```mermaid
 flowchart LR
-    ASK["<b>A question</b><br/><i>&quot;Does Medicare<br/>cover dental care?&quot;</i>"]
+    ASK["<b>A question</b><br/><i>“Does Medicare<br/>cover dental care?”</i>"]
     API["<b>FastAPI</b><br/>/api/ask"]
     BRAIN["<b>LangGraph state machine</b><br/>check the question, search,<br/>judge what came back,<br/>answer or refuse<br/><i>(drawn in full below)</i>"]
     VDB2[("<b>Meaning index</b><br/>Qdrant")]
@@ -394,7 +394,15 @@ make e2e ARGS="--base-url https://<your-service>.onrender.com"
 ```
 
 The free plan sleeps after inactivity, so the first request to a cold instance takes
-around 30 seconds. After that the median is ~220 ms.
+around 30 seconds. After that the median is ~210 ms. Before a demo, open the link a
+minute early so the instance is awake.
+
+The deployed instance is verified the same way as a local one — the browser suite runs
+against the real URL, all 32 checks:
+
+```bash
+make e2e ARGS="--base-url https://medicare-rag-assistant.onrender.com"
+```
 
 ---
 
