@@ -149,7 +149,30 @@ def build_embed_text(chunk_text: str, doc_title: str, section: str, heading: str
     return " | ".join(parts) + "\n" + chunk_text
 
 
+#: A page of a booklet's own contents listing or back-of-book index. These
+#: pages are navigation, not content: "Assignment 11, 32-48, 51, 53" answers
+#: nothing, but it is extremely keyword-dense, so it ranks well and then gets
+#: quoted back as an answer. Asking "what is Part A?" used to return the line
+#: "5 Medicare has different parts 5 Medicare Part A (Hospital Insurance) 6"
+#: straight from a contents page.
+#:
+#: The rule uses the publisher's own labelling rather than a statistical guess:
+#: CMS prints "Contents", "Table of contents" or "Index of topics" at the top of
+#: exactly these pages. Heuristics based on digit density were tried first and
+#: rejected - they also flagged the Medigap plan comparison chart, the IRMAA
+#: income brackets and the state-by-state SHIP phone numbers, all of which are
+#: real answers people need.
+NAVIGATION_PAGE_RE = re.compile(r"\s*(index of topics|table of contents|contents)\b", re.I)
+
+
+def is_navigation_page(page: PageRecord) -> bool:
+    """True for a contents listing or an index page, which hold no answers."""
+    return bool(NAVIGATION_PAGE_RE.match(page.text.strip()))
+
+
 def chunk_page(page: PageRecord) -> list[Chunk]:
+    if is_navigation_page(page):
+        return []
     heading = detect_heading(page.text)
     pieces = split_text(page.text)
     chunks: list[Chunk] = []
@@ -175,8 +198,14 @@ def chunk_page(page: PageRecord) -> list[Chunk]:
 def build_chunks(pages: list[PageRecord] | None = None, output: Path = CHUNKS_PATH) -> list[Chunk]:
     pages = pages if pages is not None else load_pages()
     chunks: list[Chunk] = []
+    skipped = 0
     for page in pages:
-        chunks.extend(chunk_page(page))
+        produced = chunk_page(page)
+        if not produced and is_navigation_page(page):
+            skipped += 1
+        chunks.extend(produced)
+    if skipped:
+        print(f"[chunk] skipped {skipped} contents/index pages (navigation, not content)")
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with gzip.open(output, "wt", encoding="utf-8") as handle:

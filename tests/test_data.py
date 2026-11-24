@@ -3,8 +3,16 @@
 from __future__ import annotations
 
 from medicare_rag.config import MEDICARE_PUBLICATIONS
-from medicare_rag.data.chunk import build_embed_text, detect_heading, load_chunks, split_text
-from medicare_rag.data.parse import find_running_headers, load_pages, parse_page
+from medicare_rag.data.chunk import (
+    NAVIGATION_PAGE_RE,
+    build_embed_text,
+    chunk_page,
+    detect_heading,
+    is_navigation_page,
+    load_chunks,
+    split_text,
+)
+from medicare_rag.data.parse import PageRecord, find_running_headers, load_pages, parse_page
 
 
 class TestPageParsing:
@@ -99,3 +107,81 @@ class TestCorpus:
 
     def test_no_chunk_leaks_a_running_header(self) -> None:
         assert not [c for c in load_chunks() if c.text.startswith("Welcome: Medicare Hospice")]
+
+
+class TestNavigationPages:
+    """Contents listings and back-of-book indexes must never become chunks.
+
+    They are the densest keyword pages in the whole corpus, so they rank well
+    and then get quoted as answers. "What is Part A?" once returned the line
+    "5 Medicare has different parts 5 Medicare Part A (Hospital Insurance) 6",
+    read straight off a contents page.
+    """
+
+    def test_a_contents_page_produces_no_chunks(self) -> None:
+        page = PageRecord(
+            doc_id="11036",
+            doc_title="Enrolling in Medicare Part A and Part B",
+            pdf_page=3,
+            printed_page=None,
+            section="",
+            text=(
+                "Contents 5 Section 1-The Medicare Program 5 What's Medicare?\n"
+                "5 Medicare has different parts 5 Medicare Part A (Hospital Insurance) "
+                "6 Medicare Part B (Medical Insurance) 9 Can I get Part A and Part B?"
+            ),
+        )
+        assert is_navigation_page(page)
+        assert chunk_page(page) == []
+
+    def test_an_index_page_produces_no_chunks(self) -> None:
+        page = PageRecord(
+            doc_id="10050",
+            doc_title="Medicare & You",
+            pdf_page=4,
+            printed_page=None,
+            section="",
+            text=(
+                "Index of topics Note: The bold page numbers have the most details. "
+                "Assignment 11, 32-48, 51, 53, 57-58, 62, 63-64, 69, 119 B Balance exams 45"
+            ),
+        )
+        assert is_navigation_page(page)
+        assert chunk_page(page) == []
+
+    def test_real_content_that_looks_numeric_is_kept(self) -> None:
+        """The rejected digit-density heuristic flagged all three of these."""
+        # Long enough to clear CHUNK_MIN_CHARS, so that an empty result would
+        # mean the navigation filter rejected them and nothing else.
+        for text in (
+            "Medigap plans may cover: Medigap plans A B C D F* G* K L M N "
+            "Medicare Part A coinsurance and hospital costs up to an additional "
+            "365 days after Medicare benefits are used up 100% 100% 100% 100% "
+            "100% 100% 100% 100% 100% 100% Medicare Part B coinsurance or "
+            "copayment 100% 100% 100% 100% 50% 75% 100% 100%",
+            "If your yearly income in 2024 was: File individual tax return "
+            "$106,000 or less $212,000 or less you pay $185.00 each month. "
+            "Above $106,000 up to $133,000 above $212,000 up to $266,000 you "
+            "pay $259.00 each month. Above $133,000 up to $167,000 you pay "
+            "$370.00 each month in 2026 for your Part B premium.",
+            "Alabama State Health Insurance Assistance Program (SHIP) "
+            "1-800-243-5463 Alaska Medicare Information Office 1-800-478-6065 "
+            "Arizona State Health Insurance Assistance Program 1-800-432-4040 "
+            "Arkansas Senior Health Insurance Information Program 1-800-224-6330 "
+            "California Health Insurance Counseling Program 1-800-434-0222",
+        ):
+            page = PageRecord(
+                doc_id="10050",
+                doc_title="Medicare & You",
+                pdf_page=80,
+                printed_page=80,
+                section="",
+                text=text,
+            )
+            assert not is_navigation_page(page), text[:40]
+            assert chunk_page(page), text[:40]
+
+    def test_the_built_index_contains_no_contents_pages(self) -> None:
+        """The shipped index, not a synthetic page."""
+        leaked = [c for c in load_chunks() if NAVIGATION_PAGE_RE.match(c.text.strip())]
+        assert not leaked, [f"{c.doc_id} p{c.pdf_page}" for c in leaked[:5]]

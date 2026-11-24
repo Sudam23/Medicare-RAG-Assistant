@@ -7,7 +7,7 @@ config:
 graph TD;
 	start([a question arrives])
 	guard(guard<br/>block unsafe or off-topic input)
-	retrieve(retrieve<br/>hybrid search over 1,130 chunks)
+	retrieve(retrieve<br/>hybrid search over 1,108 chunks)
 	grade(grade<br/>is the best passage good enough?)
 	rewrite(rewrite<br/>rephrase and try once more)
 	answer(answer<br/>write it with citations)

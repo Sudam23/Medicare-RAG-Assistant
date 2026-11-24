@@ -42,7 +42,7 @@ config:
 graph TD;
 	start([a question arrives])
 	guard(guard<br/>block unsafe or off-topic input)
-	retrieve(retrieve<br/>hybrid search over 1,130 chunks)
+	retrieve(retrieve<br/>hybrid search over 1,108 chunks)
 	grade(grade<br/>is the best passage good enough?)
 	rewrite(rewrite<br/>rephrase and try once more)
 	answer(answer<br/>write it with citations)
@@ -129,6 +129,23 @@ Result: 0 header leaks, and 114 of 118 section labels preserved. The docstring i
 
 A header is detected as a short line (≤70 chars) appearing in the first 3 lines of at
 least 30% of a document's pages, with a minimum of 4 pages.
+
+### Navigation pages
+
+Eleven pages are dropped before chunking: six contents listings and five back-of-book
+index pages. They are the densest keyword pages in the corpus, because a contents page
+contains every section title in the booklet, so they retrieve well and then get quoted
+back as an answer that answers nothing.
+
+They are identified by the heading CMS prints on them — `Contents`, `Table of contents`
+or `Index of topics` — matched at the start of the page. A statistical detector was
+written first, scoring digit density and the share of lines ending in a page number. It
+was rejected: it also flagged the Medigap plan comparison chart, the IRMAA income
+brackets and the state-by-state SHIP phone list, which are among the most useful pages
+in the corpus. The publisher's own labelling is both more precise and easier to defend.
+
+No gold answer lives on any of the 11 pages, which was checked before removing them, so
+the change cannot silently delete a correct answer.
 
 ### Chunks
 

@@ -108,7 +108,7 @@ config:
 graph TD;
 	start([a question arrives])
 	guard(guard<br/>block unsafe or off-topic input)
-	retrieve(retrieve<br/>hybrid search over 1,130 chunks)
+	retrieve(retrieve<br/>hybrid search over 1,108 chunks)
 	grade(grade<br/>is the best passage good enough?)
 	rewrite(rewrite<br/>rephrase and try once more)
 	answer(answer<br/>write it with citations)
@@ -171,15 +171,24 @@ score(passage) = Σ   weight_of_search / (k + rank_in_that_search)
 ## 5. What the index contains
 
 <!-- BEGIN:index-facts -->
-- **9 official Medicare booklets**, 392 pages, split into **1,130 searchable passages**
+- **9 official Medicare booklets**, 381 pages, split into **1,108 searchable passages**
 - Embedding model `BAAI/bge-small-en-v1.5` (384 dimensions), stored in qdrant-embedded
-- Keyword index: 3,804 terms, 67,568 postings
-- Whole index builds from the PDFs in 55 seconds on a laptop CPU
+- Keyword index: 3,794 terms, 65,823 postings
+- Whole index builds from the PDFs in 62 seconds on a laptop CPU
 <!-- END:index-facts -->
 
-396 pages are parsed; 392 of them reach the index. The 4 that do not are cover pages
-and a blank form, all below the 200-character minimum — they contain no answerable
-content.
+396 pages are parsed; 381 of them reach the index. Fifteen are deliberately left out:
+
+- **4 cover pages and a blank form**, all below the 200-character minimum.
+- **11 contents listings and back-of-book index pages.** These are the single densest
+  keyword pages in the corpus — an index line reads "Assignment 11, 32–48, 51, 53" —
+  so they rank well and then get quoted as an answer. Asking *"what is Part A?"* used
+  to return the line *"5 Medicare has different parts 5 Medicare Part A (Hospital
+  Insurance) 6"*, read straight off a contents page. They are detected by the heading
+  CMS prints on them ("Contents", "Table of contents", "Index of topics") rather than
+  by a statistical guess: a digit-density heuristic was tried first and rejected
+  because it also flagged the Medigap plan chart, the IRMAA income brackets and the
+  state SHIP phone numbers, all of which are real answers.
 
 One real problem worth calling out: **364 pages print a page number on the page, and
 on 216 of them that number is not the PDF's own page index.** A booklet whose cover
@@ -204,8 +213,8 @@ tuned against is reporting your own fitting error.
 | Retrieval strategy | recall@1 | recall@3 | recall@5 | recall@10 | MRR@10 | median latency |
 | --- | --- | --- | --- | --- | --- | --- |
 | Keyword only (BM25) | 37.1% | 60.0% | 68.6% | 94.3% | 0.526 | 0.6 ms |
-| Meaning only (embeddings) **&larr; best MRR** | 51.4% | 68.6% | 91.4% | 94.3% | 0.654 | 4.3 ms |
-| Hybrid (shipped) | 48.6% | 74.3% | 88.6% | 94.3% | 0.639 | 4.6 ms |
+| Meaning only (embeddings) **&larr; best MRR** | 51.4% | 68.6% | 91.4% | 94.3% | 0.654 | 4.5 ms |
+| Hybrid (shipped) | 48.6% | 74.3% | 88.6% | 94.3% | 0.639 | 4.7 ms |
 
 35 held-out questions, scored once. Higher is better everywhere.
 <!-- END:retrieval-table -->
@@ -219,14 +228,14 @@ tuned against is reporting your own fitting error.
 | Refused an out-of-scope question | **100.0%** | 9 questions they do not cover |
 | Groundedness | **100.0%** | every sentence traced back to a cited page |
 | Cited the correct page | **94.3%** | the gold page was among the citations shown |
-| Median response time | **220 ms** | end to end, on a laptop CPU |
-| 95th percentile | **276 ms** | the slow ones |
+| Median response time | **210 ms** | end to end, on a laptop CPU |
+| 95th percentile | **297 ms** | the slow ones |
 <!-- END:pipeline-table -->
 
 **How to read "cited the correct page".** For 94.3% of in-scope questions, the page
 that genuinely answers the question was among the citations shown to the reader.
 
-**One number is deliberately low: citation precision (23.3%).** The system shows
+**One number is deliberately low: citation precision (22.9%).** The system shows
 several sources, usually 4, and only one of them is the single gold page, so most
 citations are counted "imprecise" even when they are relevant neighbouring pages.
 Showing fewer sources would raise this number and make the tool *less* useful. It is

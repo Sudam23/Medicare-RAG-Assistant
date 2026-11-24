@@ -26,9 +26,17 @@ answer is on page 16.
 
 ### Why a dev/test split
 
-Every threshold and weight in this project was tuned on **dev**. **Test was scored
-once**, after tuning finished, and not touched again. A number tuned on the set it is
-reported on is measuring the fitting, not the system.
+Every threshold and weight in this project was tuned on **dev**. A number tuned on the
+set it is reported on is measuring the fitting, not the system.
+
+**Test has been scored twice, and it is worth saying why.** It was scored once after
+tuning finished. It was then scored a second time after contents and index pages were
+removed from the index — a correctness fix decided on the publisher's page headings and
+on a check that no gold answer sat on those pages, not on any metric. The retrieval
+numbers were unchanged by it (recall@1 0.486, recall@10 0.943, MRR 0.639 before and
+after); only citation precision moved, 0.233 to 0.229. Nothing was selected by looking
+at the test numbers, which is the property the split exists to protect, but "scored
+once" would now be an overstatement and the honest version is this paragraph.
 
 ## 2. Retrieval
 
@@ -38,8 +46,8 @@ Does the search put the right page near the top?
 | Retrieval strategy | recall@1 | recall@3 | recall@5 | recall@10 | MRR@10 | median latency |
 | --- | --- | --- | --- | --- | --- | --- |
 | Keyword only (BM25) | 37.1% | 60.0% | 68.6% | 94.3% | 0.526 | 0.6 ms |
-| Meaning only (embeddings) **&larr; best MRR** | 51.4% | 68.6% | 91.4% | 94.3% | 0.654 | 4.3 ms |
-| Hybrid (shipped) | 48.6% | 74.3% | 88.6% | 94.3% | 0.639 | 4.6 ms |
+| Meaning only (embeddings) **&larr; best MRR** | 51.4% | 68.6% | 91.4% | 94.3% | 0.654 | 4.5 ms |
+| Hybrid (shipped) | 48.6% | 74.3% | 88.6% | 94.3% | 0.639 | 4.7 ms |
 
 35 held-out questions, scored once. Higher is better everywhere.
 <!-- END:retrieval-table -->
@@ -56,8 +64,8 @@ Does the search put the right page near the top?
 | Refused an out-of-scope question | **100.0%** | 9 questions they do not cover |
 | Groundedness | **100.0%** | every sentence traced back to a cited page |
 | Cited the correct page | **94.3%** | the gold page was among the citations shown |
-| Median response time | **220 ms** | end to end, on a laptop CPU |
-| 95th percentile | **276 ms** | the slow ones |
+| Median response time | **210 ms** | end to end, on a laptop CPU |
+| 95th percentile | **297 ms** | the slow ones |
 <!-- END:pipeline-table -->
 
 Measured in extractive mode, so these numbers hold for the public demo exactly as it
@@ -65,7 +73,7 @@ is deployed, with no API key.
 
 ### On citation precision
 
-23.3% looks alarming and is not. The interface shows ~4 sources; the gold label names
+22.9% looks alarming and is not. The interface shows ~4 sources; the gold label names
 one page. Every other citation is counted as imprecise even when it is a relevant
 neighbouring page — the dental example cites two different booklets, both correct and
 useful, and the metric credits one. Showing a single source would raise the number and

@@ -1,27 +1,27 @@
 {
-  "generated_at": "2026-11-24T09:07:40Z",
+  "generated_at": "2026-11-24T11:01:59Z",
   "project_version": "1.0.0",
   "split": "test",
   "index": {
-    "built_at": "2026-11-24T09:05:26+00:00",
-    "num_chunks": 1130,
-    "num_pages": 392,
+    "built_at": "2026-11-24T11:00:51+00:00",
+    "num_chunks": 1108,
+    "num_pages": 381,
     "num_documents": 9,
     "embedding_model": "BAAI/bge-small-en-v1.5",
     "embedding_dim": 384,
     "vector_store": "qdrant-embedded",
     "collection": "medicare_chunks",
-    "points_indexed": 1130,
+    "points_indexed": 1108,
     "chunking": {
       "target_chars": 900,
       "overlap_chars": 150
     },
     "bm25": {
-      "vocabulary_terms": 3804,
-      "postings": 67568,
-      "avg_doc_length": 93.208
+      "vocabulary_terms": 3794,
+      "postings": 65823,
+      "avg_doc_length": 92.764
     },
-    "build_seconds": 55.1
+    "build_seconds": 61.7
   },
   "llm_enabled": false,
   "llm_model": null,
@@ -43,8 +43,8 @@
       "mean_groundedness": 0.0,
       "cited_correct_page_rate": 0.0,
       "citation_precision": 0.0,
-      "median_latency_ms": 0.62,
-      "p95_latency_ms": 1.14
+      "median_latency_ms": 0.61,
+      "p95_latency_ms": 1.02
     },
     "dense": {
       "num_questions": 35,
@@ -62,8 +62,8 @@
       "mean_groundedness": 0.0,
       "cited_correct_page_rate": 0.0,
       "citation_precision": 0.0,
-      "median_latency_ms": 4.31,
-      "p95_latency_ms": 5.09
+      "median_latency_ms": 4.55,
+      "p95_latency_ms": 6.01
     },
     "hybrid": {
       "num_questions": 35,
@@ -81,8 +81,8 @@
       "mean_groundedness": 0.0,
       "cited_correct_page_rate": 0.0,
       "citation_precision": 0.0,
-      "median_latency_ms": 4.58,
-      "p95_latency_ms": 5.97
+      "median_latency_ms": 4.7,
+      "p95_latency_ms": 6.7
     }
   },
   "pipeline": {
@@ -100,9 +100,9 @@
     "refusal_rate_out_of_scope": 1.0,
     "mean_groundedness": 1.0,
     "cited_correct_page_rate": 0.9429,
-    "citation_precision": 0.2333,
-    "median_latency_ms": 219.56,
-    "p95_latency_ms": 276.41
+    "citation_precision": 0.2286,
+    "median_latency_ms": 209.73,
+    "p95_latency_ms": 296.95
   },
   "complementarity_at_10": {
     "k": 10,
