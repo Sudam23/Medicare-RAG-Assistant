@@ -1,5 +1,5 @@
 {
-  "built_at": "2026-11-24T11:00:51+00:00",
+  "built_at": "2026-11-24T13:51:28+00:00",
   "num_chunks": 1108,
   "num_pages": 381,
   "num_documents": 9,
@@ -17,5 +17,9 @@
     "postings": 65823,
     "avg_doc_length": 92.764
   },
-  "build_seconds": 61.7
+  "sentence_vectors": {
+    "count": 6430,
+    "purpose": "extractive answering without request-time embedding"
+  },
+  "build_seconds": 113.6
 }

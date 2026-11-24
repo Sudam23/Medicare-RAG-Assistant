@@ -46,8 +46,8 @@ Does the search put the right page near the top?
 | Retrieval strategy | recall@1 | recall@3 | recall@5 | recall@10 | MRR@10 | median latency |
 | --- | --- | --- | --- | --- | --- | --- |
 | Keyword only (BM25) | 37.1% | 60.0% | 68.6% | 94.3% | 0.526 | 0.6 ms |
-| Meaning only (embeddings) **&larr; best MRR** | 51.4% | 68.6% | 91.4% | 94.3% | 0.654 | 4.5 ms |
-| Hybrid (shipped) | 48.6% | 74.3% | 88.6% | 94.3% | 0.639 | 4.7 ms |
+| Meaning only (embeddings) **&larr; best MRR** | 51.4% | 68.6% | 91.4% | 94.3% | 0.654 | 4.8 ms |
+| Hybrid (shipped) | 48.6% | 74.3% | 88.6% | 94.3% | 0.639 | 4.6 ms |
 
 35 held-out questions, scored once. Higher is better everywhere.
 <!-- END:retrieval-table -->
@@ -64,8 +64,8 @@ Does the search put the right page near the top?
 | Refused an out-of-scope question | **100.0%** | 9 questions they do not cover |
 | Groundedness | **100.0%** | every sentence traced back to a cited page |
 | Cited the correct page | **94.3%** | the gold page was among the citations shown |
-| Median response time | **210 ms** | end to end, on a laptop CPU |
-| 95th percentile | **297 ms** | the slow ones |
+| Median response time | **6 ms** | end to end, on a laptop CPU |
+| 95th percentile | **9 ms** | the slow ones |
 <!-- END:pipeline-table -->
 
 Measured in extractive mode, so these numbers hold for the public demo exactly as it
@@ -170,3 +170,43 @@ gives 100% answered in scope and 100% refused out of scope.
 - Groundedness of 100% is partly structural: extractive answering copies sentences
   verbatim, so it is nearly guaranteed. It is the right floor to measure, not a
   difficult achievement.
+
+## 8. Speed, where it is actually deployed
+
+Every latency above was measured on a laptop. That is the honest place to compare
+retrieval strategies against each other, because they all run on the same hardware.
+It is not the honest place to describe what a visitor experiences, and for a while
+this project confused the two.
+
+Measured against the live instance on Render's free plan:
+
+| | before | after |
+|---|---|---|
+| End-to-end answer, live | **27 s** | *(see below)* |
+| End-to-end answer, laptop | 210 ms | 6 ms |
+| Of which retrieval, live | 271 ms | 271 ms |
+
+Retrieval was never the problem. Composing the answer was. An extractive answer ranks
+every sentence of every retrieved passage against the question, and that needs a vector
+per sentence — 34 forward passes of the embedding model for a typical six-source answer.
+On a laptop that is 240 ms and invisible. The free plan gives the service roughly a
+tenth of a core, where the same 34 passes took about 26 seconds.
+
+A sentence's vector depends on the corpus, not on the question, so there was no reason
+to compute it per request. `make index` now embeds every quotable sentence once and
+stores the result in `data/index/sentence_vectors.npz` — 6,430 vectors, 7.8 MB. The
+question's own vector already exists, because retrieval just computed it. Answering
+therefore runs the model **zero** times.
+
+The vectors are the same vectors and the selection rule is unchanged, so this is a
+speed change and nothing else. That is a claim worth testing rather than asserting:
+all 98 gold answers were captured before and after, and **0 of 98 changed**, down to the
+exact wording and citation order. Of the 114 fields in `evaluation_report.json`, the
+only ones that moved were timestamps, the build time, the new sentence-vector count, and
+the latencies. Every accuracy figure is identical.
+
+Two tests keep it that way: `test_cached_and_uncached_answers_are_identical` runs both
+paths and compares, and `test_answering_runs_no_model_when_the_vectors_are_present`
+replaces the embedder with one that raises, so request-time embedding cannot quietly
+return. A stale or missing sidecar is detected by a sentence-count mismatch and falls
+back to embedding — slow, never wrong.

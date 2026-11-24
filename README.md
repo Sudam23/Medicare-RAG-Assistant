@@ -80,21 +80,24 @@ flowchart LR
     CHUNK["<b>Cut into passages</b><br/>~900 characters,<br/>split at paragraph breaks<br/><b>1,108 passages</b> from 381 pages"]
     EMB["<b>Passage &rarr; meaning</b><br/>BAAI/bge-small-en-v1.5<br/>384 numbers per passage"]
     LEX["<b>Passage &rarr; words</b><br/>BM25 over<br/>3,794 distinct terms"]
+    SENT["<b>Sentence &rarr; meaning</b><br/>every quotable sentence,<br/>embedded once here so that<br/>answering embeds nothing"]
     VDB[("<b>Meaning index</b><br/>Qdrant, on disk")]
     KDB[("<b>Word index</b><br/>BM25, on disk")]
+    SDB[("<b>Sentence index</b><br/>6,430 vectors, on disk")]
 
     PDF --> PARSE --> CHUNK
     CHUNK --> EMB --> VDB
     CHUNK --> LEX --> KDB
+    CHUNK --> SENT --> SDB
 
     classDef build fill:#dbe7fb,stroke:#2f5fa8,color:#1a1a1a
     classDef store fill:#ffe9a8,stroke:#9a7b25,stroke-width:2px,color:#1a1a1a
-    class PDF,PARSE,CHUNK,EMB,LEX build
-    class VDB,KDB store
+    class PDF,PARSE,CHUNK,EMB,LEX,SENT build
+    class VDB,KDB,SDB store
 ```
 
 **Step 2 — answering a question.** This runs every time somebody asks something,
-and takes about 210 ms. It reads the two indexes built in step 1 and writes nothing.
+and takes about 6 ms. It reads the indexes built in step 1 and writes nothing.
 
 ```mermaid
 flowchart LR
@@ -103,7 +106,9 @@ flowchart LR
     BRAIN["<b>LangGraph state machine</b><br/>check the question, search,<br/>judge what came back,<br/>answer or refuse<br/><i>(drawn in full below)</i>"]
     VDB2[("<b>Meaning index</b><br/>Qdrant")]
     KDB2[("<b>Word index</b><br/>BM25")]
+    SDB2[("<b>Sentence index</b><br/>vectors from build time")]
     FUSE["<b>Merge the two lists</b><br/>weighted reciprocal<br/>rank fusion<br/><i>ranks merged, not scores</i>"]
+    PICK["<b>Pick the sentences</b><br/>score each sentence of each<br/>passage against the question<br/><i>no model runs here</i>"]
     OUT["<b>Answer</b><br/>sentences quoted from<br/>the passages, each carrying<br/>its booklet and page"]
 
     ASK --> API --> BRAIN
@@ -111,12 +116,14 @@ flowchart LR
     BRAIN -- "the question,<br/>as words" --> KDB2
     VDB2 -- "closest passages" --> FUSE
     KDB2 -- "best word matches" --> FUSE
-    FUSE --> OUT
+    FUSE --> PICK
+    SDB2 -- "sentence vectors" --> PICK
+    PICK --> OUT
 
     classDef serve fill:#d8f0dd,stroke:#1e7e34,color:#1a1a1a
     classDef store fill:#ffe9a8,stroke:#9a7b25,stroke-width:2px,color:#1a1a1a
-    class ASK,API,BRAIN,FUSE,OUT serve
-    class VDB2,KDB2 store
+    class ASK,API,BRAIN,FUSE,PICK,OUT serve
+    class VDB2,KDB2,SDB2 store
 ```
 <!-- END:system-diagram -->
 
@@ -206,7 +213,8 @@ score(passage) = Σ   weight_of_search / (k + rank_in_that_search)
 - **9 official Medicare booklets**, 381 pages, split into **1,108 searchable passages**
 - Embedding model `BAAI/bge-small-en-v1.5` (384 dimensions), stored in qdrant-embedded
 - Keyword index: 3,794 terms, 65,823 postings
-- Whole index builds from the PDFs in 62 seconds on a laptop CPU
+- Sentence index: 6,430 vectors, so that composing an answer runs the model zero times
+- Whole index builds from the PDFs in 114 seconds on a laptop CPU
 <!-- END:index-facts -->
 
 396 pages are parsed; 381 of them reach the index. Fifteen are deliberately left out:
@@ -245,8 +253,8 @@ tuned against is reporting your own fitting error.
 | Retrieval strategy | recall@1 | recall@3 | recall@5 | recall@10 | MRR@10 | median latency |
 | --- | --- | --- | --- | --- | --- | --- |
 | Keyword only (BM25) | 37.1% | 60.0% | 68.6% | 94.3% | 0.526 | 0.6 ms |
-| Meaning only (embeddings) **&larr; best MRR** | 51.4% | 68.6% | 91.4% | 94.3% | 0.654 | 4.5 ms |
-| Hybrid (shipped) | 48.6% | 74.3% | 88.6% | 94.3% | 0.639 | 4.7 ms |
+| Meaning only (embeddings) **&larr; best MRR** | 51.4% | 68.6% | 91.4% | 94.3% | 0.654 | 4.8 ms |
+| Hybrid (shipped) | 48.6% | 74.3% | 88.6% | 94.3% | 0.639 | 4.6 ms |
 
 35 held-out questions, scored once. Higher is better everywhere.
 <!-- END:retrieval-table -->
@@ -260,8 +268,8 @@ tuned against is reporting your own fitting error.
 | Refused an out-of-scope question | **100.0%** | 9 questions they do not cover |
 | Groundedness | **100.0%** | every sentence traced back to a cited page |
 | Cited the correct page | **94.3%** | the gold page was among the citations shown |
-| Median response time | **210 ms** | end to end, on a laptop CPU |
-| 95th percentile | **297 ms** | the slow ones |
+| Median response time | **6 ms** | end to end, on a laptop CPU |
+| 95th percentile | **9 ms** | the slow ones |
 <!-- END:pipeline-table -->
 
 **How to read "cited the correct page".** For 94.3% of in-scope questions, the page
@@ -394,8 +402,13 @@ make e2e ARGS="--base-url https://<your-service>.onrender.com"
 ```
 
 The free plan sleeps after inactivity, so the first request to a cold instance takes
-around 30 seconds. After that the median is ~210 ms. Before a demo, open the link a
-minute early so the instance is awake.
+around 30 seconds while it wakes. Before a demo, open the link a minute early.
+
+Every latency in this README was measured on a laptop. The free plan gives the service
+about a tenth of a CPU core, so it is slower — see
+[the note on deployed speed](docs/EVALUATION.md#8-speed-where-it-is-actually-deployed),
+which records what the live instance was measured doing and what had to change to get
+it there.
 
 The deployed instance is verified the same way as a local one — the browser suite runs
 against the real URL, all 32 checks:

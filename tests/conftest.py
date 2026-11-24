@@ -1,6 +1,6 @@
 """Shared fixtures.
 
-The retriever loads the real indexes once per session. They are small (1,130
+The retriever loads the real indexes once per session. They are small (1,108
 chunks) so this costs under a second, and testing against the real corpus
 catches things a synthetic fixture never would - a chunk whose text is empty,
 a page whose printed number is missing, a citation that points at nothing.

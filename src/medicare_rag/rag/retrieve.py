@@ -24,9 +24,11 @@ from medicare_rag.config import (
     RRF_K,
     RRF_WEIGHT_DENSE,
     RRF_WEIGHT_LEXICAL,
+    SENTENCE_VECTORS_PATH,
 )
 from medicare_rag.data.chunk import Chunk, load_chunks
 from medicare_rag.indexing.embedder import Embedder
+from medicare_rag.indexing.sentences import SentenceVectors
 from medicare_rag.indexing.store import VectorStore
 from medicare_rag.rag.fusion import reciprocal_rank_fusion
 from medicare_rag.rag.lexical import LexicalIndex
@@ -60,6 +62,10 @@ class RetrievalResult:
     chunks: list[RetrievedChunk]
     timings_ms: dict[str, float]
     top_score: float
+    #: The embedded question, when a dense arm ran. Composing an
+    #: extractive answer needs it too, and embedding it a second time is
+    #: a model forward pass that buys nothing. None in lexical-only mode.
+    query_vector: np.ndarray | None = None
 
 
 class Retriever:
@@ -71,11 +77,16 @@ class Retriever:
         store: VectorStore,
         lexical: LexicalIndex,
         embedder: Embedder,
+        sentences: SentenceVectors | None = None,
     ) -> None:
         self.chunks = chunks
         self.store = store
         self.lexical = lexical
         self.embedder = embedder
+        #: Precomputed sentence vectors for extractive answering. None when
+        #: the index predates them, in which case answering embeds its own
+        #: sentences exactly as it used to.
+        self.sentences = sentences
         self._position_by_id = {chunk.chunk_id: index for index, chunk in enumerate(chunks)}
 
     @classmethod
@@ -83,6 +94,7 @@ class Retriever:
         cls,
         qdrant_path: Path = QDRANT_PATH,
         lexical_path: Path = LEXICAL_INDEX_PATH,
+        sentences_path: Path = SENTENCE_VECTORS_PATH,
         *,
         warm_up: bool = True,
     ) -> Retriever:
@@ -97,12 +109,13 @@ class Retriever:
         embedder = Embedder()
         if warm_up:
             embedder.warm_up()
-        return cls(chunks, store, lexical, embedder)
+        sentences = SentenceVectors.load(sentences_path) if sentences_path.exists() else None
+        return cls(chunks, store, lexical, embedder, sentences)
 
     # -- arms -------------------------------------------------------------
     def _dense(
         self, query: str, pool: int, doc_ids: list[str] | None
-    ) -> tuple[list[int], dict[int, float]]:
+    ) -> tuple[list[int], dict[int, float], np.ndarray]:
         vector = self.embedder.embed_query(query)
         hits = self.store.search(vector, limit=pool, doc_ids=doc_ids)
         order: list[int] = []
@@ -113,7 +126,7 @@ class Retriever:
                 continue
             order.append(position)
             scores[position] = hit.score
-        return order, scores
+        return order, scores, vector
 
     def _lexical(
         self, query: str, pool: int, allowed: np.ndarray | None
@@ -152,12 +165,13 @@ class Retriever:
 
         dense_order: list[int] = []
         dense_scores: dict[int, float] = {}
+        query_vector: np.ndarray | None = None
         lexical_order: list[int] = []
         lexical_scores: dict[int, float] = {}
 
         if mode in ("hybrid", "dense"):
             started = time.perf_counter()
-            dense_order, dense_scores = self._dense(query, candidate_pool, doc_ids)
+            dense_order, dense_scores, query_vector = self._dense(query, candidate_pool, doc_ids)
             timings["dense"] = (time.perf_counter() - started) * 1000
         if mode in ("hybrid", "lexical"):
             started = time.perf_counter()
@@ -215,5 +229,10 @@ class Retriever:
         top_score = max((c.dense_score for c in results if c.dense_score is not None), default=0.0)
 
         return RetrievalResult(
-            query=query, mode=mode, chunks=results, timings_ms=timings, top_score=top_score
+            query=query,
+            mode=mode,
+            chunks=results,
+            timings_ms=timings,
+            top_score=top_score,
+            query_vector=query_vector,
         )

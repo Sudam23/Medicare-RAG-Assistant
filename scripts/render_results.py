@@ -127,21 +127,24 @@ flowchart LR
     CHUNK["<b>Cut into passages</b><br/>~{idx["chunking"]["target_chars"]} characters,<br/>split at paragraph breaks<br/><b>{idx["num_chunks"]:,} passages</b> from {idx["num_pages"]} pages"]
     EMB["<b>Passage &rarr; meaning</b><br/>{idx["embedding_model"]}<br/>{idx["embedding_dim"]} numbers per passage"]
     LEX["<b>Passage &rarr; words</b><br/>BM25 over<br/>{idx["bm25"]["vocabulary_terms"]:,} distinct terms"]
+    SENT["<b>Sentence &rarr; meaning</b><br/>every quotable sentence,<br/>embedded once here so that<br/>answering embeds nothing"]
     VDB[("<b>Meaning index</b><br/>Qdrant, on disk")]
     KDB[("<b>Word index</b><br/>BM25, on disk")]
+    SDB[("<b>Sentence index</b><br/>{idx["sentence_vectors"]["count"]:,} vectors, on disk")]
 
     PDF --> PARSE --> CHUNK
     CHUNK --> EMB --> VDB
     CHUNK --> LEX --> KDB
+    CHUNK --> SENT --> SDB
 
     classDef build fill:#dbe7fb,stroke:#2f5fa8,color:#1a1a1a
     classDef store fill:#ffe9a8,stroke:#9a7b25,stroke-width:2px,color:#1a1a1a
-    class PDF,PARSE,CHUNK,EMB,LEX build
-    class VDB,KDB store
+    class PDF,PARSE,CHUNK,EMB,LEX,SENT build
+    class VDB,KDB,SDB store
 ```
 
 **Step 2 \u2014 answering a question.** This runs every time somebody asks something,
-and takes about {pipe["median_latency_ms"]:.0f} ms. It reads the two indexes built in step 1 and writes nothing.
+and takes about {pipe["median_latency_ms"]:.0f} ms. It reads the indexes built in step 1 and writes nothing.
 
 ```mermaid
 flowchart LR
@@ -150,7 +153,9 @@ flowchart LR
     BRAIN["<b>LangGraph state machine</b><br/>check the question, search,<br/>judge what came back,<br/>answer or refuse<br/><i>(drawn in full below)</i>"]
     VDB2[("<b>Meaning index</b><br/>Qdrant")]
     KDB2[("<b>Word index</b><br/>BM25")]
+    SDB2[("<b>Sentence index</b><br/>vectors from build time")]
     FUSE["<b>Merge the two lists</b><br/>weighted reciprocal<br/>rank fusion<br/><i>ranks merged, not scores</i>"]
+    PICK["<b>Pick the sentences</b><br/>score each sentence of each<br/>passage against the question<br/><i>no model runs here</i>"]
     OUT["<b>Answer</b><br/>sentences quoted from<br/>the passages, each carrying<br/>its booklet and page"]
 
     ASK --> API --> BRAIN
@@ -158,12 +163,14 @@ flowchart LR
     BRAIN -- "the question,<br/>as words" --> KDB2
     VDB2 -- "closest passages" --> FUSE
     KDB2 -- "best word matches" --> FUSE
-    FUSE --> OUT
+    FUSE --> PICK
+    SDB2 -- "sentence vectors" --> PICK
+    PICK --> OUT
 
     classDef serve fill:#d8f0dd,stroke:#1e7e34,color:#1a1a1a
     classDef store fill:#ffe9a8,stroke:#9a7b25,stroke-width:2px,color:#1a1a1a
-    class ASK,API,BRAIN,FUSE,OUT serve
-    class VDB2,KDB2 store
+    class ASK,API,BRAIN,FUSE,PICK,OUT serve
+    class VDB2,KDB2,SDB2 store
 ```"""
 
 
@@ -176,6 +183,8 @@ def index_facts(report: dict) -> str:
         f"stored in {idx['vector_store']}\n"
         f"- Keyword index: {idx['bm25']['vocabulary_terms']:,} terms, "
         f"{idx['bm25']['postings']:,} postings\n"
+        f"- Sentence index: {idx['sentence_vectors']['count']:,} vectors, so that composing "
+        f"an answer runs the model zero times\n"
         f"- Whole index builds from the PDFs in {idx['build_seconds']:.0f} seconds on a laptop CPU\n"
     )
 

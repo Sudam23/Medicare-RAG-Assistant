@@ -157,7 +157,11 @@ class RagPipeline:
             # Generation happened but failed verification. Fall through to the
             # extractive answer rather than show an unsupported one.
             fallback = extractive_answer(
-                state["question"], retrieval, self.retriever.embedder, sources
+                state["question"],
+                retrieval,
+                self.retriever.embedder,
+                sources,
+                self.retriever.sentences,
             )
             detail = "citations did not verify"
             if check is not None and check.invalid_citations:
@@ -167,7 +171,13 @@ class RagPipeline:
             fallback.notes.append(f"A generated answer was discarded because {detail}.")
             return {"steps": ["answer:generation_rejected"], "answer": fallback}
 
-        answer = extractive_answer(state["question"], retrieval, self.retriever.embedder, sources)
+        answer = extractive_answer(
+            state["question"],
+            retrieval,
+            self.retriever.embedder,
+            sources,
+            self.retriever.sentences,
+        )
         return {"steps": ["answer:extractive"], "answer": answer}
 
     def _refuse(self, state: RagState) -> dict:

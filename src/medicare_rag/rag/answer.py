@@ -23,18 +23,20 @@ import numpy as np
 
 from medicare_rag.config import DISCLAIMER
 from medicare_rag.indexing.embedder import Embedder
-from medicare_rag.rag.guardrails import CitationCheck, check_citations, split_units
+from medicare_rag.indexing.sentences import (
+    SentenceVectors,
+    answerable_units,
+)
+from medicare_rag.rag.guardrails import CitationCheck, check_citations
 from medicare_rag.rag.llm import LLM, Completion
 from medicare_rag.rag.prompts import PROMPT_VERSION, SYSTEM_PROMPT, build_user_prompt
 from medicare_rag.rag.retrieve import RetrievalResult, RetrievedChunk
 
 NOT_IN_SOURCES = "NOT_IN_SOURCES"
 MAX_EXTRACTIVE_SENTENCES = 5
-MIN_SENTENCE_CHARS = 40
 # A reader wants a short answer and the full passage underneath, not the
 # passage pasted twice. Selection stops at whichever limit comes first.
 MAX_EXTRACTIVE_CHARS = 700
-MAX_UNIT_CHARS = 320
 # Two sentences sharing this fraction of their words are treated as the same
 # fact restated, and only the better-scoring one is quoted.
 DUPLICATE_OVERLAP = 0.6
@@ -119,23 +121,59 @@ def confidence_band(top_score: float) -> str:
     return "low"
 
 
+def _cached_vectors(
+    sentences: SentenceVectors | None,
+    retrieval: RetrievalResult,
+    index: int,
+    expected: int,
+) -> np.ndarray | None:
+    """The stored vectors for the ``index``-th source, if they can be trusted.
+
+    ``build_sources`` numbers the sources in retrieval order, so the n-th
+    source is the n-th retrieved chunk. Anything that does not line up - no
+    stored vectors, a short retrieval list, a sentence count that disagrees -
+    returns None, and the caller embeds the passages itself. A stale index
+    makes answers slow, never wrong.
+    """
+    if sentences is None or index >= len(retrieval.chunks):
+        return None
+    return sentences.get(retrieval.chunks[index].chunk.chunk_id, expected)
+
+
 def extractive_answer(
     question: str,
     retrieval: RetrievalResult,
     embedder: Embedder,
     sources: list[Source],
+    sentences: SentenceVectors | None = None,
 ) -> Answer:
     """Quote the sentences from the retrieved passages that answer the question.
 
     Sentences are ranked by similarity to the question, then re-ordered to
     follow the sources so the result reads in document order rather than in
     score order.
+
+    ``sentences`` holds the sentence vectors computed when the index was built.
+    Given them, this function runs no model at all: it reads the vectors it
+    needs and multiplies. Without them it embeds the sentences itself, which is
+    what it always did - the two paths pick the same sentences, because the
+    vectors are the same vectors.
     """
     candidates: list[tuple[int, int, str]] = []  # (source number, position, sentence)
-    for source in sources:
-        for position, sentence in enumerate(split_units(source.text)):
-            if MIN_SENTENCE_CHARS <= len(sentence) <= MAX_UNIT_CHARS:
-                candidates.append((source.number, position, sentence))
+    blocks: list[np.ndarray] = []
+    # Every source must have usable stored vectors, or none are used: a
+    # half-cached run would score some sentences against the question and
+    # leave others out of the ranking entirely.
+    all_cached = sentences is not None
+    for index, source in enumerate(sources):
+        units = answerable_units(source.text)
+        candidates.extend((source.number, position, unit) for position, unit in units)
+        if all_cached:
+            block = _cached_vectors(sentences, retrieval, index, len(units))
+            if block is None:
+                all_cached = False
+            else:
+                blocks.append(block)
 
     if not candidates:
         return Answer(
@@ -147,8 +185,16 @@ def extractive_answer(
             notes=["no_extractable_sentences"],
         )
 
-    question_vector = embedder.embed_query(question)
-    sentence_vectors = embedder.embed_documents([sentence for _, _, sentence in candidates])
+    question_vector = (
+        retrieval.query_vector
+        if retrieval.query_vector is not None
+        else embedder.embed_query(question)
+    )
+    sentence_vectors = (
+        np.vstack(blocks)
+        if all_cached and blocks
+        else embedder.embed_documents([sentence for _, _, sentence in candidates])
+    )
     similarities = sentence_vectors @ question_vector
 
     # A heading is the most similar thing on the page to the question, because

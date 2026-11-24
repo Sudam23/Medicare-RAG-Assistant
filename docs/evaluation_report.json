@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-11-24T11:01:59Z",
+  "generated_at": "2026-11-24T13:51:38Z",
   "project_version": "1.0.0",
   "split": "test",
   "index": {
-    "built_at": "2026-11-24T11:00:51+00:00",
+    "built_at": "2026-11-24T13:51:28+00:00",
     "num_chunks": 1108,
     "num_pages": 381,
     "num_documents": 9,
@@ -21,7 +21,11 @@
       "postings": 65823,
       "avg_doc_length": 92.764
     },
-    "build_seconds": 61.7
+    "sentence_vectors": {
+      "count": 6430,
+      "purpose": "extractive answering without request-time embedding"
+    },
+    "build_seconds": 113.6
   },
   "llm_enabled": false,
   "llm_model": null,
@@ -43,8 +47,8 @@
       "mean_groundedness": 0.0,
       "cited_correct_page_rate": 0.0,
       "citation_precision": 0.0,
-      "median_latency_ms": 0.61,
-      "p95_latency_ms": 1.02
+      "median_latency_ms": 0.64,
+      "p95_latency_ms": 0.94
     },
     "dense": {
       "num_questions": 35,
@@ -62,8 +66,8 @@
       "mean_groundedness": 0.0,
       "cited_correct_page_rate": 0.0,
       "citation_precision": 0.0,
-      "median_latency_ms": 4.55,
-      "p95_latency_ms": 6.01
+      "median_latency_ms": 4.78,
+      "p95_latency_ms": 6.21
     },
     "hybrid": {
       "num_questions": 35,
@@ -81,8 +85,8 @@
       "mean_groundedness": 0.0,
       "cited_correct_page_rate": 0.0,
       "citation_precision": 0.0,
-      "median_latency_ms": 4.7,
-      "p95_latency_ms": 6.7
+      "median_latency_ms": 4.64,
+      "p95_latency_ms": 6.57
     }
   },
   "pipeline": {
@@ -101,8 +105,8 @@
     "mean_groundedness": 1.0,
     "cited_correct_page_rate": 0.9429,
     "citation_precision": 0.2286,
-    "median_latency_ms": 209.73,
-    "p95_latency_ms": 296.95
+    "median_latency_ms": 6.09,
+    "p95_latency_ms": 9.06
   },
   "complementarity_at_10": {
     "k": 10,

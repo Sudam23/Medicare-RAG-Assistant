@@ -25,6 +25,7 @@ CHUNKS_PATH = PROCESSED_DIR / "chunks.jsonl.gz"
 CORPUS_STATS_PATH = PROCESSED_DIR / "corpus_stats.json"
 QDRANT_PATH = INDEX_DIR / "qdrant"
 LEXICAL_INDEX_PATH = INDEX_DIR / "lexical_bm25.npz"
+SENTENCE_VECTORS_PATH = INDEX_DIR / "sentence_vectors.npz"
 INDEX_MANIFEST_PATH = INDEX_DIR / "manifest.json"
 
 GOLD_PATH = DATA_DIR / "gold" / "questions.jsonl"

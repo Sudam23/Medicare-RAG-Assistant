@@ -1,11 +1,14 @@
 """Build both indexes from the chunk corpus.
 
-Produces three artifacts under ``data/index``:
+Produces four artifacts under ``data/index``:
 
 ``qdrant/``
     the vector collection, one point per chunk
 ``lexical_bm25.npz``
     the BM25 inverted index over the same chunks, in the same order
+``sentence_vectors.npz``
+    a vector per quotable sentence, so that composing an answer costs no
+    model forward passes at request time
 ``manifest.json``
     what was built, from what, with what settings - so a served index can be
     identified rather than guessed at
@@ -30,9 +33,11 @@ from medicare_rag.config import (
     INDEX_MANIFEST_PATH,
     LEXICAL_INDEX_PATH,
     QDRANT_PATH,
+    SENTENCE_VECTORS_PATH,
 )
 from medicare_rag.data.chunk import Chunk, load_chunks
 from medicare_rag.indexing.embedder import Embedder
+from medicare_rag.indexing.sentences import SentenceVectors
 from medicare_rag.indexing.store import VectorStore
 from medicare_rag.rag.lexical import LexicalIndex
 
@@ -68,6 +73,11 @@ def build_index(chunks: list[Chunk] | None = None) -> dict:
     store.close()
     print(f"[index] vector store holds {indexed:,} points")
 
+    print("[index] embedding quotable sentences for extractive answering")
+    sentence_vectors = SentenceVectors.build(chunks, embedder)
+    sentence_vectors.save(SENTENCE_VECTORS_PATH)
+    print(f"[index] {sentence_vectors.num_sentences:,} sentence vectors")
+
     print("[index] building BM25 index")
     lexical = LexicalIndex.build([chunk.embed_text for chunk in chunks])
     lexical.save(LEXICAL_INDEX_PATH)
@@ -91,6 +101,10 @@ def build_index(chunks: list[Chunk] | None = None) -> dict:
             "vocabulary_terms": len(lexical.vocabulary),
             "postings": int(lexical.postings_term.size),
             "avg_doc_length": round(float(lexical.doc_lengths.mean()), 3),
+        },
+        "sentence_vectors": {
+            "count": sentence_vectors.num_sentences,
+            "purpose": "extractive answering without request-time embedding",
         },
         "build_seconds": round(elapsed, 1),
     }
