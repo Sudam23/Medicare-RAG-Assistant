@@ -5,7 +5,7 @@ the official government booklets, with the page number next to every claim — a
 honest "I don't know" when the booklets don't answer it.**
 
 **Live demo:** <!-- BEGIN:demo-url -->https://medicare-rag-assistant.onrender.com<!-- END:demo-url -->
-**Source:** https://github.com/Sudam23/medicare-rag-assistant
+**Source:** https://github.com/Sudam23/Medicare-RAG-Assistant
 
 Built by Sudam Kumar Paul as a portfolio project for an AI/ML engineering role.
 Not medical, legal or insurance advice.
@@ -380,7 +380,7 @@ No GPU. No vector database server. No API key required.
 With a Render account signed in, open:
 
 ```
-https://render.com/deploy?repo=https://github.com/Sudam23/medicare-rag-assistant
+https://render.com/deploy?repo=https://github.com/Sudam23/Medicare-RAG-Assistant
 ```
 
 Render reads `render.yaml`, builds the `Dockerfile`, and brings the service up on the
